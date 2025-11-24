@@ -1,0 +1,5 @@
+{
+  "name": "Copy of Landmark Lens",
+  "description": "An AI-powered app to discover history. Upload a photo of a landmark, and let the AI identify it, provide a detailed historical overview using Google Search, and even give you directions.",
+  "requestFramePermissions": []
+}

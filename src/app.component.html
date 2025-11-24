@@ -1,0 +1,163 @@
+<main class="min-h-screen bg-gray-900 text-gray-100 flex flex-col items-center justify-center p-4 antialiased overflow-hidden relative">
+  
+  <div class="absolute top-4 right-4 z-10">
+    <div class="flex items-center bg-gray-800 rounded-full p-1">
+      <button (click)="setLanguage('en')" 
+              [class.bg-indigo-600]="language() === 'en'"
+              [class.text-white]="language() === 'en'"
+              [class.text-gray-400]="language() !== 'en'"
+              class="px-3 py-1 text-sm font-medium rounded-full transition-colors duration-200 ease-in-out">
+        EN
+      </button>
+      <button (click)="setLanguage('id')" 
+              [class.bg-indigo-600]="language() === 'id'"
+              [class.text-white]="language() === 'id'"
+              [class.text-gray-400]="language() !== 'id'"
+              class="px-3 py-1 text-sm font-medium rounded-full transition-colors duration-200 ease-in-out">
+        ID
+      </button>
+    </div>
+  </div>
+
+  @switch (state().status) {
+    @case ('initial') {
+      <div class="text-center flex flex-col items-center animate-fade-in w-full px-4">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-20 w-20 text-indigo-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9 9 0 100-18 9 9 0 000 18z" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 0a9 9 0 019-9 9 9 0 019 9m-18 0a9 9 0 009 9 9 9 0 009-9" />
+        </svg>
+        <h1 class="text-5xl font-bold text-white mb-2">{{ uiText().title }}</h1>
+        <p class="text-lg text-gray-400 mb-8 max-w-lg">
+          {{ uiText().subtitle }}
+        </p>
+
+        <label for="file-upload" class="cursor-pointer bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-transform transform hover:scale-105 duration-300 ease-in-out">
+          {{ uiText().uploadButton }}
+        </label>
+        <input id="file-upload" type="file" class="hidden" (change)="onFileSelected($event)" accept="image/jpeg,image/png,image/webp,image/heic,.heic,.dng,.cr2,.cr3,.nef,.arw" />
+      </div>
+    }
+
+    @case ('loading') {
+      <div class="text-center flex flex-col items-center animate-fade-in">
+        <svg class="animate-spin h-12 w-12 text-indigo-400 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <p class="text-xl text-gray-300">{{ state().message }}</p>
+      </div>
+    }
+
+    @case ('error') {
+      <div class="bg-gray-800 p-8 rounded-xl shadow-2xl text-center max-w-lg animate-fade-in">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-red-400 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+        </svg>
+        <h2 class="text-3xl font-bold text-white mb-2">{{ uiText().error.title }}</h2>
+        <p class="text-gray-400 mb-6">{{ state().message }}</p>
+        <button (click)="reset()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-full shadow-lg transition-transform transform hover:scale-105 duration-300 ease-in-out">
+          {{ uiText().tryAgainButton }}
+        </button>
+      </div>
+    }
+
+    @case ('result') {
+      @let data = state().data;
+      @let imageUrl = state().imageUrl;
+
+      <div class="w-full max-w-6xl mx-auto animate-fade-in-slow bg-gray-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row" style="height: clamp(80vh, 800px, 90vh);">
+        
+        <div class="md:w-1/2 h-64 md:h-auto flex-shrink-0">
+          <img [src]="imageUrl" [alt]="data.name" class="w-full h-full object-cover">
+        </div>
+
+        <div class="md:w-1/2 p-6 md:p-8 flex flex-col min-h-0">
+          <div class="flex-grow overflow-y-auto pr-4" 
+               [class.opacity-50]="isTranslating()"
+               [class.pointer-events-none]="isTranslating()"
+               [class.transition-opacity]="isTranslating()">
+            <h1 class="text-4xl font-extrabold text-white mb-4">{{ data.name }}</h1>
+            
+            <p class="text-gray-300 leading-relaxed whitespace-pre-line mb-6">
+              {{ data.history }}
+            </p>
+
+            @if (data.sources.length > 0) {
+              <div class="mt-4">
+                <h3 class="text-xl font-semibold text-gray-200 mb-3 border-b-2 border-gray-700 pb-2">{{ uiText().sourcesTitle }}</h3>
+                <ul class="space-y-2">
+                  @for (source of data.sources; track source.uri) {
+                    <li class="flex items-start">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-indigo-400 mr-2 mt-1 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                      </svg>
+                      <a [href]="source.uri" target="_blank" rel="noopener noreferrer" class="text-indigo-300 hover:text-indigo-200 underline transition-colors duration-200 break-words">
+                        {{ source.title }}
+                      </a>
+                    </li>
+                  }
+                </ul>
+              </div>
+            }
+
+            <!-- Directions Section -->
+            <div class="mt-8 border-t border-gray-700 pt-6">
+              @if (!directions()) {
+                @if (!showDirectionsForm()) {
+                  <button (click)="showDirectionsForm.set(true)" class="w-full text-center bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-full shadow-lg transition-transform transform hover:scale-105 duration-300 ease-in-out">
+                    {{ uiText().getDirectionsButton }}
+                  </button>
+                } @else {
+                  <div class="bg-gray-700/50 p-4 rounded-lg animate-fade-in">
+                    <h4 class="font-semibold text-white mb-4 text-lg">{{ uiText().directionsFormTitle }}</h4>
+                    <form [formGroup]="directionsForm" (ngSubmit)="onGetDirectionsSubmit()" class="space-y-4">
+                      <div>
+                        <label for="fullAddress" class="block text-sm font-medium text-gray-300">{{ uiText().fullAddressLabel }}</label>
+                        <textarea id="fullAddress" formControlName="fullAddress" rows="3" class="mt-1 block w-full bg-gray-900 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" [placeholder]="uiText().fullAddressPlaceholder"></textarea>
+                      </div>
+                      <div class="flex items-center justify-end space-x-3 pt-2">
+                        <button type="button" (click)="showDirectionsForm.set(false)" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-full transition-colors duration-200">
+                           {{ uiText().cancelButton }}
+                        </button>
+                        <button type="submit" [disabled]="directionsForm.invalid || directionsLoading()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-full transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center">
+                          @if(directionsLoading()) {
+                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                          }
+                          {{ uiText().findRouteButton }}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                }
+              } @else {
+                <div class="animate-fade-in">
+                  <h3 class="text-2xl font-bold text-white mb-3">{{ uiText().directionsTitle }}</h3>
+                  <div class="bg-gray-900/75 p-4 rounded-lg max-h-48 overflow-y-auto">
+                     <p class="text-gray-300 leading-relaxed whitespace-pre-line">{{ directions().directions }}</p>
+                  </div>
+
+                  <a [href]="directions().mapUrl" target="_blank" rel="noopener noreferrer" class="w-full text-center block mt-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-full transition-colors duration-200">
+                    {{ uiText().openInMapsButton }}
+                  </a>
+                  <button (click)="directions.set(null)" class="w-full text-center mt-2 bg-gray-700 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-full transition-colors duration-200">
+                    {{ uiText().clearDirectionsButton }}
+                  </button>
+                </div>
+              }
+            </div>
+
+          </div>
+          
+          <div class="mt-auto pt-6 border-t border-gray-700 flex-shrink-0">
+            <button (click)="reset()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-full shadow-lg transition-transform transform hover:scale-105 duration-300 ease-in-out">
+              {{ uiText().analyzeAnotherButton }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+  }
+</main>
